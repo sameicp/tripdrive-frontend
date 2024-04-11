@@ -1,30 +1,125 @@
-import { useState } from 'react';
-import { internet_identity_backend } from 'declarations/internet_identity_backend';
+import React from "react";
+import HomePage from "./page/HomePage";
+import RideHistory from "./components/RideHistory";
+import Account from "./components/Account";
+import NavBar from "./components/NavBar";
+import Dashboard from "./page/Dashboard";
+import ErrorPage from "./components/ErrorPage";
+import SelectLocation from "./components/SelectLocation";
+import { AuthClient } from "@dfinity/auth-client";
+import { Actor, HttpAgent } from "@dfinity/agent";
+import { idlFactory } from "declarations/internet_identity_backend";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import CreateAccount from "./components/CreateAccount";
+
+const env = process.env.DFX_NETWORK || "local";
+const localhost = "http://localhost:4943";
+const livehost = "https://icp0.io";
 
 function App() {
-  const [greeting, setGreeting] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [identity, setIdentity] = useState(null);
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    const name = event.target.elements.name.value;
-    internet_identity_backend.greet(name).then((greeting) => {
-      setGreeting(greeting);
+  const login = async () => {
+    const authClient = await AuthClient.create({
+      idleOptions: {
+        idleTimeout: 1000 * 60 * 30,
+        disableDefaultIdleCallback: true,
+      },
     });
-    return false;
-  }
+    await authClient.login({
+      identityProvider:
+        env === "local"
+          ? `http://${process.env.CANISTER_ID_INTERNET_IDENTITY}.localhost:4943`
+          : "https://identity.ic0.app/#authorize",
+      onSuccess: () => {
+        checkAuth();
+      },
+    });
+  };
+
+  const checkAuth = async () => {
+    try {
+      const authClient = await AuthClient.create();
+      if (await authClient.isAuthenticated()) {
+        setIsAuthenticated(true);
+      }
+      const id = await authClient.getIdentity();
+      setIdentity(id);
+    } catch (error) {
+      console.log("Error on check auth ", error);
+    }
+  };
+
+  const logout = async () => {
+    const authClient = await AuthClient.create();
+    await authClient.logout();
+    setIsAuthenticated(false);
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const principal = identity?.getPrincipal().toString();
+
+  let agent = new HttpAgent({
+    host: env === "local" ? localhost : livehost,
+    identity: identity,
+  });
+
+  //Only use agent.fetchRootKey() in development mode, in production remove this line
+  agent.fetchRootKey();
+
+  const backendActor = Actor.createActor(idlFactory, {
+    agent,
+    canisterId: process.env.CANISTER_ID_INTERNET_IDENTITY_BACKEND,
+  });
 
   return (
-    <main>
-      <img src="/logo2.svg" alt="DFINITY logo" />
-      <br />
-      <br />
-      <form action="#" onSubmit={handleSubmit}>
-        <label htmlFor="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" />
-        <button type="submit">Click Me!</button>
-      </form>
-      <section id="greeting">{greeting}</section>
-    </main>
+    <Router>
+      <div className=" bg-gray-900 text-white min-h-screen">
+        <NavBar
+          {...{ login, logout, isAuthenticated, principal, backendActor }}
+        />
+        <div className="mx-auto pt-16">
+          {" "}
+          {/* Add top padding to push content below NavBar */}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <HomePage {...{ backendActor, isAuthenticated, login }} />
+              }
+            />
+            <Route
+              path="request-ride"
+              element={
+                <SelectLocation {...{ backendActor, isAuthenticated }} />
+              }
+            />
+            <Route
+              path="ride-history"
+              element={<RideHistory {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route
+              path="account"
+              element={<Account {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route
+              path="dashboard"
+              element={<Dashboard {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route
+              path="signup"
+              element={<CreateAccount {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route path="/*" element={<ErrorPage />} />
+          </Routes>
+        </div>
+      </div>
+    </Router>
   );
 }
 
