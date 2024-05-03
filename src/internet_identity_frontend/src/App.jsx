@@ -12,6 +12,8 @@ import { idlFactory } from "declarations/internet_identity_backend";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CreateAccount from "./components/CreateAccount";
+import Request from "./components/Request";
+import RegisterVehicle from "./components/RegisterVehicle";
 
 const env = process.env.DFX_NETWORK || "local";
 const localhost = "http://localhost:4943";
@@ -45,7 +47,7 @@ function App() {
       if (await authClient.isAuthenticated()) {
         setIsAuthenticated(true);
       }
-      const id = await authClient.getIdentity();
+      const id = authClient.getIdentity();
       setIdentity(id);
     } catch (error) {
       console.log("Error on check auth ", error);
@@ -79,7 +81,7 @@ function App() {
 
   return (
     <Router>
-      <div className=" bg-gray-900 text-white min-h-screen">
+      <div className=" bg-gray-900  text-gray-500 min-h-screen">
         <NavBar
           {...{ login, logout, isAuthenticated, principal, backendActor }}
         />
@@ -94,26 +96,36 @@ function App() {
               }
             />
             <Route
-              path="request-ride"
+              path="/request/update"
+              element={<Request {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route
+              path="/request/ride"
               element={
                 <SelectLocation {...{ backendActor, isAuthenticated }} />
               }
             />
             <Route
-              path="ride-history"
+              path="/ride/history"
               element={<RideHistory {...{ backendActor, isAuthenticated }} />}
             />
             <Route
-              path="account"
+              path="/account"
               element={<Account {...{ backendActor, isAuthenticated }} />}
             />
             <Route
-              path="dashboard"
+              path="/dashboard"
               element={<Dashboard {...{ backendActor, isAuthenticated }} />}
             />
             <Route
-              path="signup"
+              path="/signup"
               element={<CreateAccount {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route
+              path="/register"
+              element={
+                <RegisterVehicle {...{ backendActor, isAuthenticated }} />
+              }
             />
             <Route path="/*" element={<ErrorPage />} />
           </Routes>

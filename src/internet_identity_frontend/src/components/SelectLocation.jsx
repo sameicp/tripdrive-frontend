@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SelectLocation({ backendActor, isAuthenticated }) {
   const [_from, setFrom] = useState("");
   const [_to, setTo] = useState("");
   const [price, setPrice] = useState("");
+  const navigate = useNavigate();
 
   const handleFromChange = (e) => {
     setFrom(e.target.value);
@@ -34,63 +35,64 @@ export default function SelectLocation({ backendActor, isAuthenticated }) {
     setFrom("");
     setTo("");
     setPrice("");
+    navigate("/request/update");
   };
 
   return (
     <div className="flex flex-col items-center mt-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="w-full md:w-3/4 lg:w-1/2">
         <div className="mb-4">
-          <label htmlFor="from" className="block mb-2">
+          <label htmlFor="from" className="block text-lg mb-2 font-semibold">
             FROM:
           </label>
           <select
             id="from"
-            className="bg-gray-200 border border-gray-400 rounded py-2 px-4 w-full"
+            className="input-field"
             value={_from}
             onChange={handleFromChange}
           >
-            <option value="">-</option>
-            <option value="UniversityCampus">University</option>
-            <option value="HarareCityCentre">Harare City</option>
+            <option value="">Select From</option>
+            <option value="UniversityCampus">University Campus</option>
+            <option value="HarareCityCentre">Harare City Centre</option>
           </select>
         </div>
         <div className="mb-4">
-          <label htmlFor="to" className="block mb-2">
+          <label htmlFor="to" className="block text-lg mb-2 font-semibold">
             TO:
           </label>
           <select
             id="to"
-            className="bg-gray-200 border border-gray-400 rounded py-2 px-4 w-full"
+            className="input-field"
             value={_to}
             onChange={handleToChange}
           >
-            <option value="">-</option>
-            <option value="UniversityCampus">University</option>
-            <option value="HarareCityCentre">Harare City</option>
+            <option value="">Select To</option>
+            <option value="UniversityCampus">University Campus</option>
+            <option value="HarareCityCentre">Harare City Centre</option>
           </select>
         </div>
         <div className="mb-4">
-          <label htmlFor="price" className="block mb-2">
+          <label htmlFor="price" className="block text-lg mb-2 font-semibold">
             PRICE:
           </label>
           <input
             type="number"
             id="price"
-            className="bg-gray-200 border border-gray-400 rounded py-2 px-4 w-full"
+            className="input-field"
             value={price}
             onChange={handlePriceChange}
-            step="0.01" // Allow float numbers
+            step="0.50" // Allow float numbers
             min="0" // Minimum value
+            placeholder="Enter Price"
           />
         </div>
       </div>
       <button
-        className="bg-blue-700 text-white py-2 px-4 rounded shadow-md mt-4"
+        className="bg-blue-700 text-white py-3 px-6 rounded-lg shadow-md mt-4 font-semibold hover:bg-blue-800 transition duration-300"
         onClick={handleSubmit}
       >
         Submit
       </button>
-      <Link to="/">Go to Home Page</Link>
     </div>
   );
 }

@@ -7,10 +7,15 @@ export default function HomePage({ backendActor, isAuthenticated, login }) {
       {isAuthenticated ? (
         <Dashboard {...{ backendActor, isAuthenticated }} />
       ) : (
-        <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
+        <div className="flex flex-col items-center justify-center bg-gray-900 mt-20">
           <div className="max-w-2xl text-center">
-            <h1 className="text-4xl font-bold mb-8">Welcome to TripDrive</h1>
-            <p className="text-lg text-gray-700 mb-8">
+            <h1 className="text-4xl font-bold mb-8">
+              Welcome to{" "}
+              <span className="uppercase text-blue-gray-600 tracking-widest">
+                Tripdrive
+              </span>
+            </h1>
+            <p className="text-lg text-gray-400 mb-8">
               TripDrive is a ride-sharing platform that connects drivers and
               passengers for convenient and affordable transportation.
             </p>
@@ -21,12 +26,12 @@ export default function HomePage({ backendActor, isAuthenticated, login }) {
               >
                 Log in
               </button>
-              <Link
+              {/* <Link
                 to="/signup"
                 className="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg text-lg font-semibold shadow-md transition duration-300"
               >
                 Sign up
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>

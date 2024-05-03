@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateAccount({ backendActor }) {
   const [formData, setFormData] = useState({
@@ -7,6 +8,7 @@ export default function CreateAccount({ backendActor }) {
     phoneNumber: "",
   });
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,6 +48,7 @@ export default function CreateAccount({ backendActor }) {
       backendActor.create_user_acc(formData).then((result) => {
         if (result.err) {
           console.log(result.err);
+          throw new Error(result.err);
         } else {
           console.log(result.ok);
         }
@@ -57,10 +60,11 @@ export default function CreateAccount({ backendActor }) {
         phoneNumber: "",
       });
     }
+    navigate("/account");
   };
 
   return (
-    <div className="flex items-center min-h-screen bg-white dark:bg-gray-900">
+    <div className="flex items-center bg-gray-900">
       <div className="container mx-auto">
         <div className="max-w-md mx-auto my-10">
           <div className="text-center">

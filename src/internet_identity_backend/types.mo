@@ -52,7 +52,7 @@ module {
         license_plate_number: Text;
         color: Text;
         car_model: Text;
-        image: Blob;
+        // image: Blob;
     };
 
     public type RideInformation = {

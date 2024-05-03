@@ -6,7 +6,7 @@ import Buffer "mo:base/Buffer";
 import List "mo:base/List";
 import Debug "mo:base/Debug"; // use when the canister traps.
 import Option "mo:base/Option";
-import Blob "mo:base/Blob";
+// import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
@@ -466,6 +466,15 @@ actor {
       return #ok(account_info)
     } catch e {
       return #err(Error.message(e));
+    }
+  };
+
+  public shared({caller}) func get_driver(): async Result.Result<Text, Text>{
+    try {
+      await validate_driver(caller);
+      return #ok("cool");
+    } catch e {
+      return #err(Error.message(e))
     }
   };
 
