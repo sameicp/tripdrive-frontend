@@ -95,10 +95,10 @@ function App() {
                 <HomePage {...{ backendActor, isAuthenticated, login }} />
               }
             />
-            <Route
+            {/* <Route
               path="/request/update"
               element={<Request {...{ backendActor, isAuthenticated }} />}
-            />
+            /> */}
             <Route
               path="/request/ride"
               element={

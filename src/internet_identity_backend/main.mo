@@ -1,4 +1,4 @@
-import T "/types";
+import T "./type/types";
 import TrieMap "mo:base/TrieMap";
 import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";

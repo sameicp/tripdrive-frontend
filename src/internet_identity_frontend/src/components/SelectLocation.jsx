@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-export default function SelectLocation({ backendActor, isAuthenticated }) {
+export default function SelectLocation({ createRequest }) {
   const [_from, setFrom] = useState("");
   const [_to, setTo] = useState("");
   const [price, setPrice] = useState("");
@@ -27,10 +27,7 @@ export default function SelectLocation({ backendActor, isAuthenticated }) {
     };
     // Here you can use rideDetails as needed, for example, send it to the backendActor
     console.log("Ride details:", rideDetails);
-    backendActor.create_request(rideDetails).then((request_id) => {
-      console.log(request_id);
-    });
-
+    createRequest(rideDetails);
     // Clear input fields after submission
     setFrom("");
     setTo("");

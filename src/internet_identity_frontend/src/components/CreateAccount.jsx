@@ -1,14 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function CreateAccount({ backendActor }) {
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    phoneNumber: "",
-  });
-  const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
+export default function CreateAccount({
+  handleSubmit,
+  setFormData,
+  formData,
+  setErrors,
+  errors,
+}) {
+  // const [formData, setFormData] = useState({
+  //   username: "",
+  //   email: "",
+  //   phoneNumber: "",
+  // });
+  // const [errors, setErrors] = useState({});
+  // const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,45 +29,45 @@ export default function CreateAccount({ backendActor }) {
     }));
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.username.trim()) {
-      newErrors.username = "Full name is required";
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "Phone number is required";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // const validate = () => {
+  //   const newErrors = {};
+  //   if (!formData.username.trim()) {
+  //     newErrors.username = "Full name is required";
+  //   }
+  //   if (!formData.email.trim()) {
+  //     newErrors.email = "Email is required";
+  //   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+  //     newErrors.email = "Email is invalid";
+  //   }
+  //   if (!formData.phoneNumber.trim()) {
+  //     newErrors.phoneNumber = "Phone number is required";
+  //   }
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validate()) {
-      // Form submission logic goes here
-      console.log("Form submitted:", formData);
-      backendActor.create_user_acc(formData).then((result) => {
-        if (result.err) {
-          console.log(result.err);
-          throw new Error(result.err);
-        } else {
-          console.log(result.ok);
-        }
-      });
-      // Reset the form fields after submission
-      setFormData({
-        username: "",
-        email: "",
-        phoneNumber: "",
-      });
-    }
-    navigate("/account");
-  };
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (validate()) {
+  //     // Form submission logic goes here
+  //     console.log("Form submitted:", formData);
+  //     backendActor.create_user_acc(formData).then((result) => {
+  //       if (result.err) {
+  //         console.log(result.err);
+  //         throw new Error(result.err);
+  //       } else {
+  //         console.log(result.ok);
+  //       }
+  //     });
+  //     // Reset the form fields after submission
+  //     setFormData({
+  //       username: "",
+  //       email: "",
+  //       phoneNumber: "",
+  //     });
+  //   }
+  //   navigate("/account");
+  // };
 
   return (
     <div className="flex items-center bg-gray-900">

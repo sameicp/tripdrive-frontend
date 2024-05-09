@@ -1,13 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
-export default function NavBar({
-  login,
-  logout,
-  isAuthenticated,
-  principal,
-  backendActor,
-}) {
+export default function NavBar({ login, logout, isAuthenticated, principal }) {
   const pages = [
     { page: "Home", path: "/" },
     { page: "Book here", path: "/request/ride" },
@@ -47,10 +41,10 @@ export default function NavBar({
 
         <div className="md:hidden">
           <button
-            className="text-gray-600 hover:text-gray-800 focus:outline-none"
-            onClick={toggleMobileMenu}
+            className="bg-blue-600 text-gray-200 p-2 rounded hover:bg-gray-600 hover:text-gray-100 tracking-widest"
+            onClick={isAuthenticated ? logout : login}
           >
-            {isMobileMenuOpen ? "Close" : "Menu"}
+            {isAuthenticated ? "Log out" : "Log in"}
           </button>
         </div>
 
