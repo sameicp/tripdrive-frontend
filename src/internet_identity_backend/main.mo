@@ -10,6 +10,7 @@ import Option "mo:base/Option";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
+import Float "mo:base/Float";
 
 actor {
   
@@ -32,6 +33,11 @@ actor {
     email = "";
     phone_number = "";
     var ride_history = List.nil<T.RideID>();
+  };
+
+  type Coordinates = {
+    latitude: Float;
+    longitude: Float;
   };
 
   /////////////////////////
@@ -153,8 +159,8 @@ actor {
       ride_id = generate_ride_id();
       user_id = request.user_id;
       driver_id;
-      origin = request.from;
-      destination = request.to;
+      origin = request.depature;
+      destination = request.destination;
       var payment_status = #NotPaid;
       var price = request.price;
       var ride_status = #RideAccepted;
@@ -209,12 +215,13 @@ actor {
     };
   };
 
-  func _create_request(request_id: T.RequestID, user_id: Principal, request_input: T.RequestInput): T.RideRequestType {
+  func _create_request(request_id: T.RequestID, user_id: Principal, request_input: T.RequestInput, passenger_details: T.Profile): T.RideRequestType {
     return {
       request_id;
       user_id;
-      from = request_input.from;
-      to = request_input.to;
+      passenger_details;
+      depature = request_input.depature;
+      destination = request_input.destination;
       var status = #Pending;
       var price = request_input.price;
     };
@@ -239,15 +246,15 @@ actor {
     };
   };
 
-  func filter_request(requests_array: [T.RideRequestType], query_passengers: T.QueryPassengers): [T.RideRequestType] {
-    return Array.filter<T.RideRequestType>(
-          requests_array, 
-          func request = 
-            request.from == query_passengers.from 
-            and request.to == query_passengers.to 
-            and request.status != #Accepted
-        );
-  };
+  // func filter_request(requests_array: [T.RideRequestType], query_passengers: T.QueryPassengers): [T.RideRequestType] {
+  //   return Array.filter<T.RideRequestType>(
+  //         requests_array, 
+  //         func request = 
+  //           request.from == query_passengers.from 
+  //           and request.to == query_passengers.to 
+  //           and request.status != #Accepted
+  //       );
+  // };
 
   func create_driver_object(user: T.User, car: T.Car): T.Driver {
     return {
@@ -299,6 +306,33 @@ actor {
     };
   };
 
+  let degreesToRadians = func (degrees: Float) : Float {
+    return degrees * (Float.pi / 180.0);
+  };
+
+  // that function has take to coordinates as input
+  // the two coordinates which is lat and lng have to be converted into radians
+  // calculates the distance of the coordinates
+  public func distance(first_pos: Coordinates, second_pos: Coordinates) : async Float{
+    let first_lat_rad: Float = degreesToRadians(first_pos.latitude);
+    let second_lat_rad: Float = degreesToRadians(second_pos.latitude);
+    let first_lng_rad: Float = degreesToRadians(first_pos.longitude);
+    let second_lng_rad: Float = degreesToRadians(second_pos.longitude);
+
+    // Havesine formula
+    let dlat = second_lat_rad - first_lat_rad;
+    let dlng = second_lng_rad - first_lng_rad;
+
+    let a = Float.pow(Float.sin(dlat / 2.0), 2.0) 
+              + Float.cos(first_lat_rad) * Float.cos(second_lat_rad) 
+              * Float.pow(Float.sin(dlng / 2.0), 2.0);
+    let c = 2 * Float.arcsin(Float.sqrt(a));
+    // radius of the earth in km
+    let r = 6371.0;
+    // return the distance between two points
+    return c * r;
+  };
+
   ////////////////////
   // PUBLIC METHODS //
   ////////////////////
@@ -323,11 +357,13 @@ actor {
   public shared({caller}) func create_request(request_input: T.RequestInput): async(Result.Result<T.RequestID, Text>) {
     try {
       await check_user(caller);
-      await validate_inputs(request_input.from, request_input.to);
       // generation the id of the request
       let request_id: T.RequestID = generate_request_id();
+
+      // get basic infor about the passenger
+      let passenger_details: T.Profile = await user_info(caller);
       // creating users request and add it to a list of requests
-      let request: T.RideRequestType = _create_request(request_id, caller, request_input);
+      let request: T.RideRequestType = _create_request(request_id, caller, request_input, passenger_details);
       // adding the request into a pool of request
       pool_requests := List.push(request, pool_requests);
       return #ok(request_id);
@@ -374,19 +410,20 @@ actor {
     };
   };
 
-  public shared({caller}) func get_requests(): async Result.Result<[T.RequestOutput], Text> {
+  public shared({caller}) func get_request(): async Result.Result<[T.RequestOutput], Text> {
     try {
       let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
       let user_requests: [T.RideRequestType] = Array.filter<T.RideRequestType>(requests_array, func request = request.user_id == caller);
       let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(user_requests, func request = {
         request_id = request.request_id;
         user_id = request.user_id;
-        from = request.from;
-        to = request.to;
+        passenger_details = request.passenger_details;
+        depature = request.depature;
+        destination = request.destination;
         status = request.status;
         price = request.price;
       });
-      return #ok(requests);
+      return #ok(Array.take(requests, 1));
     } catch e {
       return #err(Error.message(e));
     }
@@ -397,16 +434,20 @@ actor {
   //////////////////////
 
   // writing the function of the driver
-  public shared({caller}) func query_passengers_available(query_passengers: T.QueryPassengers): async(Result.Result<[T.FullRequestInfo], Text>) {
-    try {
-      await validate_driver(caller);
-      let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
-      // filter the array based on driver's location
-      let local_requests: [T.RideRequestType] = filter_request(requests_array, query_passengers);
-      return #ok(await passenger_details(local_requests));
-    } catch e {
-      return #err(Error.message(e));
-    }
+  // public shared({caller}) func query_passengers_available(query_passengers: T.QueryPassengers): async(Result.Result<[T.FullRequestInfo], Text>) {
+  //   try {
+  //     await validate_driver(caller);
+  //     let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
+  //     // filter the array based on driver's location
+  //     let local_requests: [T.RideRequestType] = filter_request(requests_array, query_passengers);
+  //     return #ok(await passenger_details(local_requests));
+  //   } catch e {
+  //     return #err(Error.message(e));
+  //   }
+  // };
+
+  public func get_passengers() {
+
   };
 
   // First the driver have to create an account as a normal user
@@ -447,6 +488,25 @@ actor {
       return #err(Error.message(e));
     }
   };
+  
+   public func get_requests(): async Result.Result<[T.RequestOutput], Text> {
+    try {
+      let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
+      let user_requests: [T.RideRequestType] = Array.filter<T.RideRequestType>(requests_array, func request = request.status == #Pending );
+      let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(user_requests, func request = {
+        request_id = request.request_id;
+        user_id = request.user_id;
+        passenger_details = request.passenger_details;
+        depature = request.depature;
+        destination = request.destination;
+        status = request.status;
+        price = request.price;
+      });
+      return #ok(requests);
+    } catch e {
+      return #err(Error.message(e));
+    }
+  };
 
   public shared({caller}) func finished_ride(ride_id: T.RideID): async(Result.Result<(), Text>) {
     try {
@@ -467,7 +527,7 @@ actor {
     } catch e {
       return #err(Error.message(e));
     }
-  };
+  }; 
 
   public shared({caller}) func get_driver(): async Result.Result<Text, Text>{
     try {

@@ -2,17 +2,4 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Default background color */
-// body {
-//   background-color: #f3f4f6; /* light gray */
-// }
-
-// body {
-//   //   margin: 0;
-//   //   padding: 0;
-//   //   display: flex;
-//   //   justify-content: center;
-//   //   align-items: center;
-//   //   height: 100vh; /* Ensures the content is centered vertically */
-//   background-color: #f3f4f6; /* light gray */
-// }
+@import "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";

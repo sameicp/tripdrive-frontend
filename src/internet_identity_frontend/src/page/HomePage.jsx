@@ -26,12 +26,6 @@ export default function HomePage({ backendActor, isAuthenticated, login }) {
               >
                 Log in
               </button>
-              {/* <Link
-                to="/signup"
-                className="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg text-lg font-semibold shadow-md transition duration-300"
-              >
-                Sign up
-              </Link> */}
             </div>
           </div>
         </div>

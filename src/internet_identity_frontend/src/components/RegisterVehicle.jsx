@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function RegisterVehicle({ backendActor, isAuthenticated }) {
   const [formData, setFormData] = useState({
@@ -26,9 +27,30 @@ export default function RegisterVehicle({ backendActor, isAuthenticated }) {
         console.log(result);
         if (result.err) {
           console.log(result.err);
+          toast.error('failed to register as driver', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            transition: Bounce,
+            });
           throw new Error(result.err);
         } else {
           console.log(result.ok);
+          toast.success('driver rigistered successfully', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            });
         }
       });
     } catch (e) {
@@ -124,6 +146,18 @@ export default function RegisterVehicle({ backendActor, isAuthenticated }) {
           </form>
         </div>
       )}
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

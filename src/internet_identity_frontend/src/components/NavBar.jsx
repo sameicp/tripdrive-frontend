@@ -12,10 +12,6 @@ export default function NavBar({ login, logout, isAuthenticated, principal }) {
 
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  function toggleMobileMenu() {
-    setMobileMenuOpen(!isMobileMenuOpen);
-  }
-
   function shortenString(inputString) {
     if (inputString.length >= 10) {
       const shortenedString =

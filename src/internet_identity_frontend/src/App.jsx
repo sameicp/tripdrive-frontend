@@ -5,7 +5,8 @@ import Account from "./components/Account";
 import NavBar from "./components/NavBar";
 import Dashboard from "./page/Dashboard";
 import ErrorPage from "./components/ErrorPage";
-import SelectLocation from "./components/SelectLocation";
+import CreateRequest from "./components/CreateRequest";
+import CheckRequests from "./components/CheckRequests";
 import { AuthClient } from "@dfinity/auth-client";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory } from "declarations/internet_identity_backend";
@@ -95,15 +96,13 @@ function App() {
                 <HomePage {...{ backendActor, isAuthenticated, login }} />
               }
             />
-            {/* <Route
-              path="/request/update"
-              element={<Request {...{ backendActor, isAuthenticated }} />}
-            /> */}
             <Route
-              path="/request/ride"
-              element={
-                <SelectLocation {...{ backendActor, isAuthenticated }} />
-              }
+              path="/createRequest"
+              element={<CreateRequest {...{ backendActor, isAuthenticated }} />}
+            />
+            <Route 
+              path="/checkRequests" 
+              element={<CheckRequests {...{backendActor, isAuthenticated}} />} 
             />
             <Route
               path="/ride/history"

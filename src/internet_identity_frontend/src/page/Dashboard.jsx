@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import CreateAccount from "../components/CreateAccount";
 import FrontPage from "./Frontend";
 import { useNavigate } from "react-router-dom";
+import {toast} from "react-toastify"
 
 export default function Dashboard({ isAuthenticated, backendActor }) {
   const [account, setAccount] = useState({
@@ -21,6 +22,7 @@ export default function Dashboard({ isAuthenticated, backendActor }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [isCreated, setIsCreated] = useState(false);
   const navigate = useNavigate();
 
   const validate = () => {
@@ -48,9 +50,31 @@ export default function Dashboard({ isAuthenticated, backendActor }) {
       backendActor.create_user_acc(formData).then((result) => {
         if (result.err) {
           console.log(result.err);
+          toast.error('failed to create an account', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            transition: Bounce,
+            });
           throw new Error(result.err);
         } else {
           console.log(result.ok);
+          setIsCreated(true);
+           toast.success('Account was created succeccfully', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            }); 
         }
       });
       // Reset the form fields after submission
@@ -60,7 +84,7 @@ export default function Dashboard({ isAuthenticated, backendActor }) {
         phoneNumber: "",
       });
     }
-    navigate("/account");
+    // navigate("/account");
   };
 
   function getAccount() {
@@ -98,6 +122,7 @@ export default function Dashboard({ isAuthenticated, backendActor }) {
           setFormData={setFormData}
           formData={formData}
           setErrors={setErrors}
+          isCreated={isCreated}
           errors={errors}
         />
       )}

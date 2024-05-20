@@ -42,7 +42,7 @@ module {
         #HarareCityCentre;
     };
 
-    public type Location = {
+    public type Position = {
         lat: Float;
         lng: Float;
     };
@@ -59,8 +59,8 @@ module {
         ride_id: RideID;
         user_id: Principal;
         driver_id: Principal;
-        origin: CurrentSupportedLocation;
-        destination: CurrentSupportedLocation;
+        origin: Position;
+        destination: Position;
         var payment_status: PaymentStatus;
         var price: Float;
         var ride_status: RideStatus;
@@ -89,8 +89,9 @@ module {
     public type RideRequestType = {
         request_id: RequestID;
         user_id: Principal;
-        from: CurrentSupportedLocation;
-        to: CurrentSupportedLocation;
+        passenger_details: Profile;
+        depature: Position;
+        destination: Position;
         var status: RequestStatus;
         var price: Float;
     };
@@ -98,10 +99,16 @@ module {
     public type RequestOutput = {
         request_id: RequestID;
         user_id: Principal;
-        from: CurrentSupportedLocation;
-        to: CurrentSupportedLocation;
+        passenger_details: Profile;
+        depature: Position;
+        destination: Position;
         status: RequestStatus;
         price: Float;
+    };
+
+    public type PassengerInfor = {
+        username: Text;
+        phone_number: Text;
     };
 
     public type FullRequestInfo = {
@@ -119,8 +126,8 @@ module {
     };
 
     public type RequestInput = {
-        from: CurrentSupportedLocation;
-        to: CurrentSupportedLocation;
+        depature: Position;
+        destination: Position;
         price: Float;
     };
 

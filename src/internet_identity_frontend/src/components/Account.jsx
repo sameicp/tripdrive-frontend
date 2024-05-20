@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Loader from "./Loading";
+import { Link } from "react-router-dom";
 
 export default function Account({ backendActor, isAuthenticated }) {
   const [account, setAccount] = useState(null);
@@ -21,17 +21,17 @@ export default function Account({ backendActor, isAuthenticated }) {
   return (
     <>
       {isAuthenticated && !account && (
-        <div class="shadow rounded-md p-4 max-w-sm w-full mx-auto mt-10">
-          <div class="animate-pulse flex space-x-4">
-            <div class="rounded-full bg-gray-700 h-10 w-10"></div>
-            <div class="flex-1 space-y-6 py-1">
-              <div class="h-2 bg-gray-700 rounded"></div>
-              <div class="space-y-3">
-                <div class="grid grid-cols-3 gap-4">
-                  <div class="h-2 bg-gray-700 rounded col-span-2"></div>
-                  <div class="h-2 bg-gray-700 rounded col-span-1"></div>
+        <div className="shadow rounded-md p-4 max-w-sm w-full mx-auto mt-10">
+          <div className="animate-pulse flex space-x-4">
+            <div className="rounded-full bg-gray-700 h-10 w-10"></div>
+            <div className="flex-1 space-y-6 py-1">
+              <div className="h-2 bg-gray-700 rounded"></div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="h-2 bg-gray-700 rounded col-span-2"></div>
+                  <div className="h-2 bg-gray-700 rounded col-span-1"></div>
                 </div>
-                <div class="h-2 bg-gray-700 rounded"></div>
+                <div className="h-1 bg-gray-700 rounded"></div>
               </div>
             </div>
           </div>
@@ -40,15 +40,6 @@ export default function Account({ backendActor, isAuthenticated }) {
       {isAuthenticated && account && (
         <div className="p-6 flex justify-center items-center h-full">
           <div className="md:grid md:grid-cols-4 gap-2 bg-gray-900 p-4 rounded-xl">
-            {/* <div className="h-52 shadow-xl">
-            <div className="flex w-full h-full">
-              <img
-                src="https://res.cloudinary.com/dboafhu31/image/upload/v1625318266/imagen_2021-07-03_091743_vtbkf8.png"
-                className="w-36 h-36 m-auto"
-                alt=""
-              />
-            </div>
-      </div> */}
             <div className="md:col-span-3 h-70 shadow-xl space-y-8 p-3">
               <div>{console.log("Account here, ", account)}</div>
               <div className="flex">
@@ -95,6 +86,12 @@ export default function Account({ backendActor, isAuthenticated }) {
                   readOnly
                 />
               </div>
+              <Link
+                to="/"
+                className="block rounded-lg py-2 px-6 m-12 font-medium text-gray-300 transition-colors hover:bg-gray-600 bg-blue-800 disabled:opacity-50 mt-4 uppercase tracking-widest text-center"
+              >
+              ⬅️ Home 
+            </Link> 
             </div>
           </div>
         </div>
