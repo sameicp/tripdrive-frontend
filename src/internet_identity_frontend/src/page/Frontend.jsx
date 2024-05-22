@@ -3,15 +3,28 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Request from "../components/Request";
+import RideInfo from "../components/RideInfo";
 
 export default function FrontPage({ driverStatus, backendActor }) {
   const [request, setRequest] = useState("");
+  const [rideDetails, setRideDEtails] = useState([]);
   const navigate = useNavigate();
 
   function getRequest() {
     backendActor.get_request().then((request) => {
       if (request.ok) {
         setRequest(request.ok[0]);
+      }
+    });
+  }
+
+  function getRideInformation() {
+    backendActor.driver_rides().then(res => {
+      if (res.ok) {
+        console.log("Response for driver infor: ", res.ok);
+        setRideDEtails(res.ok);
+      } else {
+        console.error(res.err);
       }
     });
   }
@@ -41,6 +54,7 @@ export default function FrontPage({ driverStatus, backendActor }) {
 
   useEffect(() => {
     getRequest();
+    getRideInformation();
   }, []);
 
   return (
@@ -64,12 +78,12 @@ export default function FrontPage({ driverStatus, backendActor }) {
             <div className="flex flex-col justify-center items-center space-y-4 mt-6 w-full sm:flex-row sm:justify-between sm:w-3/4">
               {!request ? (
                 // <MapComponent />
-              <Link
+              rideDetails.length === 0 ? <Link
                 to="/createRequest"
                 className="w-full sm:w-auto block rounded-lg py-2 px-6 font-medium text-white transition-colors hover:bg-gray-600 bg-blue-600 disabled:opacity-50 tracking-widest text-center"
               >
                 Book ride
-              </Link>
+              </Link> : rideDetails.map(ride => <RideInfo ride={ride} key={ride.ride_id.ride_id}/>) 
               ) : (
                 <Request request={request} cancelRequest={cancelRequest} />
               )}

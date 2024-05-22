@@ -11,13 +11,13 @@ export default function Map({request}) {
   }, []);
 
   return (
-    <div className="w-full min-h-72">
+    <div className="w-full min-h-96">
       {position && (
         <MapContainer
           center={position}
           zoom={13}
           scrollWheelZoom={true}
-          className="min-h-72"
+          className="min-h-96"
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

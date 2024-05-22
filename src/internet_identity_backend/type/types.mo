@@ -27,6 +27,7 @@ module {
 
     public type RideStatus = {
         #RideAccepted;
+        #RideStarted;
         #RideCompleted;
         #RideCancelled;
     };
@@ -35,11 +36,6 @@ module {
         #Accepted;
         #Pending;
         #Denied;
-    };
-
-    public type CurrentSupportedLocation = {
-        #UniversityCampus;
-        #HarareCityCentre;
     };
 
     public type Position = {
@@ -64,6 +60,18 @@ module {
         var payment_status: PaymentStatus;
         var price: Float;
         var ride_status: RideStatus;
+        date_of_ride: Nat;
+    };
+
+    public type RideInfoOutput = {
+        ride_id: RideID;
+        user_id: Principal;
+        driver_id: Principal;
+        origin: Position;
+        destination: Position;
+        payment_status: PaymentStatus;
+        price: Float;
+        ride_status: RideStatus;
         date_of_ride: Nat;
     };
 
@@ -130,10 +138,4 @@ module {
         destination: Position;
         price: Float;
     };
-
-    public type QueryPassengers = {
-        from: CurrentSupportedLocation;
-        to: CurrentSupportedLocation;
-    };
-
 }

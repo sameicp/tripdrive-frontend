@@ -76,15 +76,6 @@ actor {
     };
   };
 
-  func validate_inputs(
-    from: T.CurrentSupportedLocation, 
-    to: T.CurrentSupportedLocation
-  ): async() {
-    if (from == to) {
-      Debug.trap("select another destination.");
-    }
-  };
-
   /// Define an internal helper function to retrieve requests by ID:
   func find_request(request_id : T.RequestID) : ?T.RideRequestType {
     let result: ?T.RideRequestType = 
@@ -245,16 +236,6 @@ actor {
       var ride_history;
     };
   };
-
-  // func filter_request(requests_array: [T.RideRequestType], query_passengers: T.QueryPassengers): [T.RideRequestType] {
-  //   return Array.filter<T.RideRequestType>(
-  //         requests_array, 
-  //         func request = 
-  //           request.from == query_passengers.from 
-  //           and request.to == query_passengers.to 
-  //           and request.status != #Accepted
-  //       );
-  // };
 
   func create_driver_object(user: T.User, car: T.Car): T.Driver {
     return {
@@ -433,23 +414,6 @@ actor {
   // Driver's Methods //
   //////////////////////
 
-  // writing the function of the driver
-  // public shared({caller}) func query_passengers_available(query_passengers: T.QueryPassengers): async(Result.Result<[T.FullRequestInfo], Text>) {
-  //   try {
-  //     await validate_driver(caller);
-  //     let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
-  //     // filter the array based on driver's location
-  //     let local_requests: [T.RideRequestType] = filter_request(requests_array, query_passengers);
-  //     return #ok(await passenger_details(local_requests));
-  //   } catch e {
-  //     return #err(Error.message(e));
-  //   }
-  // };
-
-  public func get_passengers() {
-
-  };
-
   // First the driver have to create an account as a normal user
   // get the driver basic infor from his user account
   // add some additonal about the driver like his car information
@@ -469,7 +433,6 @@ actor {
     } catch e {
       return #err(Error.message(e))
     }
-    
   };
 
   // logic after the driver has selected a passenger for the trip
@@ -547,4 +510,44 @@ actor {
   };
 
   // record the lat and lng of the ride process
+  public shared({caller}) func driver_rides(): async Result.Result<[T.RideInfoOutput], Text> {
+    try{
+      // get list of ride informantion ids
+      let option_driver: ?T.Driver = drivers_map.get(caller);
+      let driver: T.Driver = switch (option_driver) {
+        case null Debug.trap("User this ID " # Principal.toText(caller) # " does not exist.");
+        case (?driver) driver;
+      }; 
+      let ride_ids: [T.RideID] = List.toArray(driver.user.ride_history);   
+
+      // scan through ride information using the ids
+      let ride_information: [T.RideInformation] = List.toArray(ride_information_storage);
+      var pending_rides: List.List<T.RideInformation> = List.nil<T.RideInformation>();
+      for (ride_id in ride_ids.vals()) {
+        for (ride_info in ride_information.vals()) {
+          if (ride_id == ride_info.ride_id and ride_info.ride_status == #RideAccepted) {
+            pending_rides := List.push(ride_info, pending_rides);
+          };
+        };
+      };
+
+      let array_pending_rides: [T.RideInformation] = List.toArray(pending_rides);
+      let output_rides: [T.RideInfoOutput] = Array.map<T.RideInformation, T.RideInfoOutput>(array_pending_rides, func ride = {
+        ride_id = ride.ride_id;
+        user_id = ride.user_id;
+        driver_id = ride.driver_id;
+        origin = ride.origin;
+        destination = ride.destination;
+        payment_status = ride.payment_status;
+        price = ride.price;
+        ride_status = ride.ride_status;
+        date_of_ride = ride.date_of_ride;
+      });
+
+      // return the list of the ride information
+      return #ok(output_rides);
+    } catch e {
+      return #err(Error.message(e));
+    }
+  };
 };
