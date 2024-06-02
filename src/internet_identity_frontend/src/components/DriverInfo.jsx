@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {Link} from "react-router-dom"
 
-export default function Account({ backendActor, isAuthenticated }) {
-  const [account, setAccount] = useState(null);
+function DriverInfo({backendActor, isAuthenticated}) {
+    const [driver, setDriver] = useState(null);
 
-  function getAccountInfo() {
-    try {
-      backendActor.get_account().then((account) => {
-        setAccount(account?.ok);
-      });
-    } catch (e) {
-      console.error(e);
+    function getDriverInfo() {
+        backendActor.get_driver_info().then(res => {
+            if(res.ok) {
+                console.log(res.ok);
+                setDriver(res.ok)
+            } else {
+                console.log(res.err);
+            }
+        })
     }
-  }
-
-  useEffect(() => {
-    getAccountInfo();
-  }, []);
+    useEffect(() => {
+      getDriverInfo();
+    },[])
 
   return (
-    <>
-      {isAuthenticated && !account && (
+     <>
+      {isAuthenticated && !driver && (
         <div className="shadow rounded-md p-4 max-w-sm w-full mx-auto mt-10">
           <div className="animate-pulse flex space-x-4">
             <div className="rounded-full bg-gray-700 h-10 w-10"></div>
@@ -37,11 +37,10 @@ export default function Account({ backendActor, isAuthenticated }) {
           </div>
         </div>
       )}
-      {isAuthenticated && account && (
+      {isAuthenticated && driver && (
         <div className="p-6 flex justify-center items-center h-full">
           <div className="md:grid md:grid-cols-4 gap-2 bg-gray-900 p-4 rounded-xl">
             <div className="md:col-span-3 h-70 shadow-xl space-y-8 p-3">
-              <div>{console.log("Account here, ", account)}</div>
               <div className="flex">
                 <span className="text-sm font-bold uppercase border-2 rounded-l px-4 py-2 bg-gray-50 text-gray-700 whitespace-no-wrap w-2/6">
                   Name:
@@ -49,62 +48,62 @@ export default function Account({ backendActor, isAuthenticated }) {
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
                   type="text"
-                  value={account.username}
+                  value={driver.driver.username}
                   readOnly
                 />
               </div>
               <div className="flex">
                 <span className="text-sm font-bold uppercase border-2 rounded-l px-4 py-2 bg-gray-50 text-gray-700 whitespace-no-wrap w-2/6">
-                  Email:
+                  Contact:
                 </span>
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
                   type="text"
-                  value={account.email}
+                  value={driver.driver.phone_number}
                   readOnly
                 />
               </div>
               <div className="flex">
                 <span className="text-sm font-bold uppercase border-2 rounded-l px-4 py-2 bg-gray-50 text-gray-700 whitespace-no-wrap w-2/6">
-                  number:
+                  Car:
                 </span>
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
                   type="text"
-                  value={account.phone_number}
+                  value={driver.car.name}
                   readOnly
                 />
               </div>
               <div className="flex">
                 <span className="text-sm font-bold uppercase border-2 rounded-l px-4 py-2 bg-gray-50 text-gray-700 whitespace-no-wrap w-2/6">
-                  address:
+                  Plate Number:
                 </span>
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
                   type="text"
-                  value={account.bitcoin_address}
+                  value={driver.car.license_plate_number}
                   readOnly
                 />
               </div>
               <div className="flex">
                 <span className="text-sm font-bold uppercase border-2 rounded-l px-4 py-2 bg-gray-50 text-gray-700 whitespace-no-wrap w-2/6">
-                  Role:
+                  Color:
                 </span>
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
                   type="text"
-                  value={"Passenger"}
+                  value={driver.car.color}
                   readOnly
                 />
               </div>
               <div className="flex">
                 <span className="text-sm font-bold uppercase border-2 rounded-l px-4 py-2 bg-gray-50 text-gray-700 whitespace-no-wrap w-2/6">
-                  Balance(SAT):
+                  Reviews:
                 </span>
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
                   type="text"
-                  value={account.bitcoin_balance}
+                  value="3.3"
                   readOnly
                 />
               </div>
@@ -112,12 +111,14 @@ export default function Account({ backendActor, isAuthenticated }) {
                 to="/"
                 className="block rounded-lg py-2 px-6 m-12 font-medium text-gray-300 transition-colors hover:bg-gray-600 bg-blue-800 disabled:opacity-50 mt-4 uppercase tracking-widest text-center"
               >
-              ⬅️ Home 
+              ⬅️ Return 
             </Link> 
             </div>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }
+
+export default DriverInfo

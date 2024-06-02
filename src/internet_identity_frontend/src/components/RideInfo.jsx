@@ -1,8 +1,9 @@
 import {useState, useEffect} from "react"
 
-function RideInfo({ride}) {
+function RideInfo({ride, passengerOnboarded, backendActor}) {
     const [destination, setDestination] = useState("");
     const [curLocation, setCurLocation] = useState("");
+    const [passengerInfo, setPassengerInfo] = useState();
     const [btc, setBtc] = useState(1);
     const [viewOnMap, setViewOnMap] = useState(false);
 
@@ -13,6 +14,15 @@ function RideInfo({ride}) {
         const data2 = await destination.json();
         setCurLocation(data1.results[0].formatted)
         setDestination(data2.results[0].formatted)
+    }
+
+    function getPassengerDetails() {
+      backendActor.passenger_info(ride.user_id).then(res => {
+        if (res.ok) {
+          console.log(res.ok)
+          setPassengerInfo(res.ok);
+        }
+      })
     }
 
     async function getBitcoinPrice() {
@@ -29,6 +39,7 @@ function RideInfo({ride}) {
     useEffect(()=>{
         getLocation();
         getBitcoinPrice();
+        getPassengerDetails();
     }, []) 
 
   return (
@@ -40,7 +51,7 @@ function RideInfo({ride}) {
           <button
             className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
           >
-            {Object.keys(ride.payment_status)[0] === "Accepted" ? "Open Map" : "Not Picked Yet"}
+            {Object.keys(ride.ride_status)[0] ===  "RideStarted" ? "Open Map" : "Not Picked Yet"}
           </button>
         </div>
         <div className="flow-root">
@@ -58,27 +69,30 @@ function RideInfo({ride}) {
                     To: {destination}
                   </p>
                   <p className="w-80 text-base font-semibold text-gray-900 truncate dark:text-gray-400">
-                    Name: Samuel Muto
+                    Name: {passengerInfo ? passengerInfo.username : "..."}
                   </p>
                   <p className="w-80 text-base font-semibold text-gray-900 truncate dark:text-gray-400">
-                    Cell number: 0771212234
+                    Contact: {passengerInfo ? passengerInfo.phone_number : "..."}
                   </p>
                 </div>
               </div>
             </li>
 
             <li className="pt-3 pb-0 sm:pt-4">
-              {false ? <div className="flex items-center space-x-4">
+              {Object.keys(ride.ride_status)[0] === "RideStarted" && 
+              (<div className="flex items-center space-x-4">
                 <div className="flex-1 min-w-0 text-base font-semibold text-gray-900">
                  USD: {parseFloat(ride.price).toFixed(2)}
                 </div>
                 <div className="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white">
                   BTC: {(ride.price / btc).toFixed(8)}
                 </div>
-              </div> : 
+              </div> )}
+              { Object.keys(ride.ride_status)[0] === "RideAccepted" &&
                 <button
+                    onClick={() => passengerOnboarded(ride.ride_id)}
                     className="block rounded-lg py-2 px-6 font-medium text-gray-300 transition-colors hover:bg-gray-600 bg-blue-800 disabled:opacity-50 mt-4 uppercase tracking-widest text-center"
-                    >
+                >
                   Passenger has Boarded
                 </button>}
             </li>

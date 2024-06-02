@@ -52,7 +52,7 @@ export default function CreateAccount({
                       id="username"
                       value={formData.username}
                       onChange={handleChange}
-                      placeholder="John Doe"
+                      placeholder="e.g Same Muto"
                       className={`w-full px-3 py-2 placeholder-gray-300 border rounded-md focus:outline-none focus:ring focus:ring-indigo-100 ${
                         errors.username ? "border-red-500" : "border-gray-300"
                       }`}
@@ -74,7 +74,7 @@ export default function CreateAccount({
                       id="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="you@company.com"
+                      placeholder="e.g you@company.com"
                       className={`w-full px-3 py-2 placeholder-gray-300 border rounded-md focus:outline-none focus:ring focus:ring-indigo-100 ${
                         errors.email ? "border-red-500" : "border-gray-300"
                       }`}
@@ -96,7 +96,7 @@ export default function CreateAccount({
                       id="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleChange}
-                      placeholder="0771212234"
+                      placeholder="e.g xxxx-xxx-xxx"
                       className={`w-full px-3 py-2 placeholder-gray-300 border rounded-md focus:outline-none focus:ring focus:ring-indigo-100 ${
                         errors.phoneNumber ? "border-red-500" : "border-gray-300"
                       }`}

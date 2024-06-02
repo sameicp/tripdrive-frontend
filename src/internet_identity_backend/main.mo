@@ -11,6 +11,7 @@ import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
 import Float "mo:base/Float";
+import Int64 "mo:base/Int64";
 
 actor {
   
@@ -26,11 +27,13 @@ actor {
   stable var pool_requests = List.nil<T.RideRequestType>();
   stable var request_id_counter = 0;
   stable var ride_id_counter = 0;
+  stable let SATOSHI: Float = 100_000_000;
 
   let default_user: T.User = {
     id = Principal.fromText("2vxsx-fae");
     username = "";
     email = "";
+    bitcoin_address = "";
     phone_number = "";
     var ride_history = List.nil<T.RideID>();
   };
@@ -39,6 +42,19 @@ actor {
     latitude: Float;
     longitude: Float;
   };
+
+  type PaymentInfo = {
+    destination_address: Text;
+    amount_in_satoshi: Nat64;
+  };
+
+  type BitcoinActor = actor {
+    get_p2pkh_address: () -> async Text;
+    get_balance: Text -> async Nat64;
+    send: PaymentInfo -> async Text;
+  };
+
+  type BitcoinAddress = Text;
 
   /////////////////////////
   /// PRIVATE METHODS   ///
@@ -108,11 +124,14 @@ actor {
       case null Debug.trap("User this ID " # Principal.toText(user_id) # " does not exist.");
       case (?user) user;
     };
+    let balance: Nat64 = await get_balance(user.bitcoin_address);
 
     let user_profile: T.Profile = {
       username = user.username;
       email = user.email;
       phone_number = user.phone_number;
+      bitcoin_address = user.bitcoin_address;
+      bitcoin_balance = balance;
     };
     return user_profile;
   };
@@ -226,12 +245,13 @@ actor {
     };
   };
 
-  func create_user(id: Principal, user_input: T.UserInput): T.User {
+  func create_user(id: Principal, user_input: T.UserInput, user_address: Text): T.User {
     let ride_history = List.nil<T.RideID>();
     return {
       id;
       username = user_input.username;
       email = user_input.email;
+      bitcoin_address = user_address;
       phone_number = user_input.phoneNumber;
       var ride_history;
     };
@@ -290,15 +310,33 @@ actor {
   let degreesToRadians = func (degrees: Float) : Float {
     return degrees * (Float.pi / 180.0);
   };
+  
+  func ride_information(id: Principal): T.RideInfoOutput {
+    let user_account: T.User = get_user_account(id);
+    let ride_ids: [T.RideID] = List.toArray(user_account.ride_history);
+    let ride: T.RideInformation = get_ride(ride_ids[0]);
+    let ride_result: T.RideInfoOutput = {
+      ride_id = ride.ride_id;
+      user_id = ride.user_id;
+      driver_id = ride.driver_id;
+      origin = ride.origin;
+      destination = ride.destination;
+      payment_status = ride.payment_status;
+      price = ride.price;
+      ride_status = ride.ride_status;
+      date_of_ride = ride.date_of_ride;
+    };
+    return ride_result;
+  };
 
   // that function has take to coordinates as input
   // the two coordinates which is lat and lng have to be converted into radians
   // calculates the distance of the coordinates
-  public func distance(first_pos: Coordinates, second_pos: Coordinates) : async Float{
-    let first_lat_rad: Float = degreesToRadians(first_pos.latitude);
-    let second_lat_rad: Float = degreesToRadians(second_pos.latitude);
-    let first_lng_rad: Float = degreesToRadians(first_pos.longitude);
-    let second_lng_rad: Float = degreesToRadians(second_pos.longitude);
+  func distance(first_pos: T.Position, second_pos: T.Position) : Float{
+    let first_lat_rad: Float = degreesToRadians(first_pos.lat);
+    let second_lat_rad: Float = degreesToRadians(second_pos.lat);
+    let first_lng_rad: Float = degreesToRadians(first_pos.lng);
+    let second_lng_rad: Float = degreesToRadians(second_pos.lng);
 
     // Havesine formula
     let dlat = second_lat_rad - first_lat_rad;
@@ -325,14 +363,14 @@ actor {
   public shared({caller}) func create_user_acc(user_input: T.UserInput): async (Result.Result<Text, Text>) {
     try {
       await check_account(caller);
+      let user_address = await get_p2pkh_address();
       // creating the user account
-      let new_user: T.User = create_user(caller, user_input);
+      let new_user: T.User = create_user(caller, user_input, user_address);
       users_map.put(caller, new_user);
       return #ok("User created successfuly");
     } catch e {
       return #err(Error.message(e))
     }
-
   };
 
   public shared({caller}) func create_request(request_input: T.RequestInput): async(Result.Result<T.RequestID, Text>) {
@@ -340,7 +378,6 @@ actor {
       await check_user(caller);
       // generation the id of the request
       let request_id: T.RequestID = generate_request_id();
-
       // get basic infor about the passenger
       let passenger_details: T.Profile = await user_info(caller);
       // creating users request and add it to a list of requests
@@ -371,7 +408,6 @@ actor {
     try {
       await check_if_user_made_request(caller, request_id);
       await check_request(request_id);
-
       let request: T.RideRequestType = extract_request(request_id);
       request.price := new_price;
       return #ok()
@@ -391,6 +427,34 @@ actor {
     };
   };
 
+  public shared({caller}) func finished_ride(ride_id: T.RideID, request_id: T.RequestID): async(Result.Result<(Text), Text>) {
+    try {
+      await check_ride_info(ride_id);
+      let ride: T.RideInformation = get_ride(ride_id);
+      await check_principals(ride.user_id, caller);
+      let account_info =  await user_info(ride.driver_id);
+      let payment_details: PaymentInfo = {
+        destination_address = account_info.bitcoin_address;
+        amount_in_satoshi = Int64.toNat64(Float.toInt64(ride.price * SATOSHI));
+      };
+      let res: Text = await send(payment_details);
+      remove_request(request_id);
+      update_ride_status(ride);
+      return #ok(res);
+    } catch e {
+      return #err(Error.message(e));
+    }
+  };
+  
+  public shared({caller}) func get_account(): async Result.Result<T.Profile, Text> {
+    try{
+      let account_info =  await user_info(caller);
+      return #ok(account_info)
+    } catch e {
+      return #err(Error.message(e));
+    }
+  }; 
+
   public shared({caller}) func get_request(): async Result.Result<[T.RequestOutput], Text> {
     try {
       let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
@@ -405,6 +469,15 @@ actor {
         price = request.price;
       });
       return #ok(Array.take(requests, 1));
+    } catch e {
+      return #err(Error.message(e));
+    }
+  };
+
+  public func passenger_info(user_id: Principal): async Result.Result<T.Profile, Text> {
+    try{
+      let account_info =  await user_info(user_id);
+      return #ok(account_info)
     } catch e {
       return #err(Error.message(e));
     }
@@ -452,10 +525,11 @@ actor {
     }
   };
   
-   public func get_requests(): async Result.Result<[T.RequestOutput], Text> {
+   public func get_requests(cur_pos: T.Position): async Result.Result<[T.RequestOutput], Text> {
     try {
       let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
-      let user_requests: [T.RideRequestType] = Array.filter<T.RideRequestType>(requests_array, func request = request.status == #Pending );
+      let user_requests: [T.RideRequestType] = Array.filter<T.RideRequestType>(requests_array, 
+        func request = (request.status == #Pending and distance(request.depature, cur_pos) <= 4.0));
       let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(user_requests, func request = {
         request_id = request.request_id;
         user_id = request.user_id;
@@ -471,25 +545,16 @@ actor {
     }
   };
 
-  public shared({caller}) func finished_ride(ride_id: T.RideID): async(Result.Result<(), Text>) {
-    try {
-      await check_ride_info(ride_id);
-      let ride: T.RideInformation = get_ride(ride_id);
-      await check_principals(ride.user_id, caller);
-      update_ride_status(ride);
-      return #ok();
-    } catch e {
-      return #err(Error.message(e));
-    }
-  };
-
-  public shared({caller}) func get_account(): async Result.Result<T.Profile, Text> {
-    try{
-      let account_info =  await user_info(caller);
-      return #ok(account_info)
-    } catch e {
-      return #err(Error.message(e));
-    }
+  public shared({caller}) func passenger_onboarded(ride_id: T.RideID): async(Result.Result<(), Text>) {
+   try { 
+    await check_ride_info(ride_id);
+    let ride: T.RideInformation = get_ride(ride_id);
+    await check_principals(ride.driver_id, caller);
+    ride.ride_status := #RideStarted;
+    return #ok();
+  } catch e {
+    return #err(Error.message(e));
+  }
   }; 
 
   public shared({caller}) func get_driver(): async Result.Result<Text, Text>{
@@ -525,7 +590,7 @@ actor {
       var pending_rides: List.List<T.RideInformation> = List.nil<T.RideInformation>();
       for (ride_id in ride_ids.vals()) {
         for (ride_info in ride_information.vals()) {
-          if (ride_id == ride_info.ride_id and ride_info.ride_status == #RideAccepted) {
+          if (ride_id == ride_info.ride_id and (ride_info.ride_status == #RideAccepted or ride_info.ride_status == #RideStarted)) {
             pending_rides := List.push(ride_info, pending_rides);
           };
         };
@@ -549,5 +614,53 @@ actor {
     } catch e {
       return #err(Error.message(e));
     }
+  }; 
+
+  public shared({caller}) func get_ride_information(): async Result.Result<T.RideInfoOutput, Text> {
+    try {
+      let ride_result = ride_information(caller);
+      return #ok(ride_result);
+    } catch e {
+      return #err(Error.message(e))
+    }
   };
+
+  public shared({caller}) func get_driver_info(): async Result.Result<T.DriverOutput, Text> {
+    try {
+      let ride_infor: T.RideInfoOutput = ride_information(caller);
+      let driver_id: Principal = ride_infor.driver_id;
+      // get the driver information
+      let option_driver: ?T.Driver = drivers_map.get(driver_id);
+      let driver: T.Driver = switch (option_driver) {
+        case null Debug.trap("User this ID " # Principal.toText(driver_id) # " does not exist.");
+        case (?driver) driver;
+      };
+      let driver_details: T.Profile = await user_info(driver_id);
+      let output: T.DriverOutput = {
+        driver = driver_details;
+        car = driver.car;
+      };
+      return #ok(output);
+    } catch e {
+      return #err(Error.message(e));
+    };
+  };
+
+  ////////////////////////
+  /// Payment in BTC  ////
+  ////////////////////////
+
+  let bitcoinActor: BitcoinActor = actor("z3c53-4iaaa-aaaap-qhj7q-cai");
+
+    private func get_balance(address: BitcoinAddress): async(Nat64) {
+      return await bitcoinActor.get_balance(address);
+    };
+
+    private func send(details: PaymentInfo): async Text {
+      return await bitcoinActor.send(details);
+    };
+
+    private func get_p2pkh_address(): async (BitcoinAddress) {
+      return await bitcoinActor.get_p2pkh_address();
+    };
 };

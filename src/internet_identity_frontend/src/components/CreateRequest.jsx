@@ -55,7 +55,6 @@ export default function CreateRequest({ backendActor, isAuthenticated }) {
             draggable: true,
             progress: undefined,
             theme: "light",
-            transition: Bounce,
             });
           throw new Error(result.err);
         } else {

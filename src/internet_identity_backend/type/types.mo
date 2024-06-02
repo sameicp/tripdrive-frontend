@@ -79,18 +79,26 @@ module {
         username: Text;
         email: Text;
         phone_number: Text;
+        bitcoin_address: Text;
+        bitcoin_balance: Nat64;
     };
 
     public type User = {
         id: Principal;
         username: Text;
         email: Text;
+        bitcoin_address: Text;
         phone_number: Text;
         var ride_history: List.List<RideID>;
     };
      
     public type Driver = {
         user: User;
+        car: Car;
+    };
+
+    public type DriverOutput = {
+        driver: Profile;
         car: Car;
     };
 

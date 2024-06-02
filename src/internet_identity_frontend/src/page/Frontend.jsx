@@ -5,9 +5,10 @@ import { toast } from "react-toastify";
 import Request from "../components/Request";
 import RideInfo from "../components/RideInfo";
 
-export default function FrontPage({ driverStatus, backendActor }) {
+export default function FrontPage({ driverStatus, backendActor, principal }) {
   const [request, setRequest] = useState("");
   const [rideDetails, setRideDEtails] = useState([]);
+  const [rideInformation, setRideInformation] = useState({});
   const navigate = useNavigate();
 
   function getRequest() {
@@ -21,12 +22,56 @@ export default function FrontPage({ driverStatus, backendActor }) {
   function getRideInformation() {
     backendActor.driver_rides().then(res => {
       if (res.ok) {
-        console.log("Response for driver infor: ", res.ok);
         setRideDEtails(res.ok);
       } else {
         console.error(res.err);
       }
     });
+
+    backendActor.get_ride_information().then(res => {
+      if(res) {
+        setRideInformation(res);
+      }
+    })
+  }
+
+  function passengerOnboarded(rideId) {
+    backendActor.passenger_onboarded(rideId).then(res => {
+      if (res.err) {
+        console.log(res.err);
+      } else {
+        console.log("Have a safe journey");
+      }
+    })
+  }
+
+  function paymentBTC() {
+    backendActor.finished_ride(riderId, requestId).then(res => {
+      if (res.err) {
+        console.error("failed to make a payment");
+        toast.error('failed to make a payment.', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            });
+      } else {
+        toast.success('payment was successfull', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            });
+      }
+    })
   }
 
   function cancelRequest(id) {
@@ -83,20 +128,30 @@ export default function FrontPage({ driverStatus, backendActor }) {
                 className="w-full sm:w-auto block rounded-lg py-2 px-6 font-medium text-white transition-colors hover:bg-gray-600 bg-blue-600 disabled:opacity-50 tracking-widest text-center"
               >
                 Book ride
-              </Link> : rideDetails.map(ride => <RideInfo ride={ride} key={ride.ride_id.ride_id}/>) 
+              </Link> : rideDetails.map(ride => <RideInfo ride={ride} passengerOnboarded={passengerOnboarded} backendActor={backendActor} key={ride.ride_id.ride_id}/>) 
               ) : (
                 <Request request={request} cancelRequest={cancelRequest} />
               )}
               <Link
-                to="/account"
+                to={(request && Object.keys(request.status)[0] === "Accepted") ? "driverinfo" : "/account"}
                 className="w-full sm:w-auto block rounded-lg py-2 px-6 font-medium text-white transition-colors hover:bg-gray-600 bg-blue-600 disabled:opacity-50 tracking-widest text-center"
               >
                 {(request && Object.keys(request.status)[0] === "Accepted") ? "View Driver Details" :'View Profile'}
               </Link>
+              {rideInformation?.ok && 
+                Object.keys(rideInformation?.ok?.ride_status)[0] === "RideStarted" && 
+                String(rideInformation?.ok?.user_id) === principal &&
+                <button
+                  onClick={paymentBTC}
+                  className="w-full sm:w-auto block rounded-lg py-2 px-6 font-medium text-white transition-colors hover:bg-gray-600 bg-blue-600 disabled:opacity-50 tracking-widest text-center"
+                >
+                  Pay for the trip
+                </button>
+              }
             </div>
           </>
         )}
-        {driverStatus.err && (
+        {driverStatus.err && !request && (
           <div className="font-semibold text-center mt-6">
             <div>Do you own a car and need to earn some money?</div>
             <div>If yes, then click the link below to register your car.</div>
@@ -108,7 +163,7 @@ export default function FrontPage({ driverStatus, backendActor }) {
             </Link>
           </div>
         )}
-        {driverStatus.ok && (
+        {driverStatus.ok && !(rideInformation?.ok) && (
           <div className="font-semibold text-center mt-6">
             <div>Hey, welcome. Are you in the mood to drive today?</div>
             <div>If yes, then check the requests and find passengers.</div>

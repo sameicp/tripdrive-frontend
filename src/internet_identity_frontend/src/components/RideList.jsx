@@ -9,7 +9,6 @@ export default function RideList({ request, cancelRequest }) {
 
   function onCancel() {
     const request_id = Number(request.request_id.request_id);
-    console.log(request_id);
     cancelRequest(request_id);
   }
 
@@ -38,7 +37,6 @@ export default function RideList({ request, cancelRequest }) {
     getLocation()
     getBitcoinPrice();
   }, [])
-  console.log(request)
 
   return (
     <>

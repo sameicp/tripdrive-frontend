@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import CreateAccount from "./components/CreateAccount";
 import Request from "./components/Request";
 import RegisterVehicle from "./components/RegisterVehicle";
+import DriverInfo from "./components/DriverInfo";
 
 const env = process.env.DFX_NETWORK || "local";
 const localhost = "http://localhost:4943";
@@ -73,7 +74,7 @@ function App() {
   });
 
   //Only use agent.fetchRootKey() in development mode, in production remove this line
-  agent.fetchRootKey();
+  // agent.fetchRootKey();
 
   const backendActor = Actor.createActor(idlFactory, {
     agent,
@@ -93,7 +94,7 @@ function App() {
             <Route
               path="/"
               element={
-                <HomePage {...{ backendActor, isAuthenticated, login }} />
+                <HomePage {...{ backendActor, isAuthenticated, login, principal }} />
               }
             />
             <Route
@@ -126,6 +127,7 @@ function App() {
                 <RegisterVehicle {...{ backendActor, isAuthenticated }} />
               }
             />
+            <Route path="/driverinfo" element={<DriverInfo  {...{ backendActor, isAuthenticated}}/>} />
             <Route path="/*" element={<ErrorPage />} />
           </Routes>
         </div>

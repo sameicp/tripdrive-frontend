@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import Dashboard from "./Dashboard";
 
-export default function HomePage({ backendActor, isAuthenticated, login }) {
+export default function HomePage({ backendActor, isAuthenticated, login, principal }) {
   return (
     <>
       {isAuthenticated ? (
-        <Dashboard {...{ backendActor, isAuthenticated }} />
+        <Dashboard {...{ backendActor, isAuthenticated, principal }} />
       ) : (
+        <>
         <div className="flex flex-col items-center justify-center bg-gray-900 mt-20">
           <div className="max-w-2xl text-center">
             <h1 className="text-4xl font-bold mb-8">
@@ -15,10 +16,10 @@ export default function HomePage({ backendActor, isAuthenticated, login }) {
                 Tripdrive
               </span>
             </h1>
-            <p className="text-lg text-gray-400 mb-8">
-              TripDrive is a ride-sharing platform that connects drivers and
-              passengers for convenient and affordable transportation.
+            <p className="text-lg text-gray-400 mb-8 uppercase tracking-widest">
+             Let us share a ride.
             </p>
+            
             <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               <button
                 onClick={login}
@@ -27,8 +28,21 @@ export default function HomePage({ backendActor, isAuthenticated, login }) {
                 Log in
               </button>
             </div>
-          </div>
+          </div> 
         </div>
+        <div className="flex justify-center items-center m-8 h-80">
+          <img 
+            src="../../public/cyber_truck.jpg" 
+            alt="Tesla car image" 
+          />
+        </div>
+        <div className="flex justify-center items-center mx-8 h-80">
+          <img 
+            src="../../public/tesla_models.jpg" 
+            alt="Tesla car image" 
+          />
+        </div>
+      </>
       )}
     </>
   );

@@ -4,7 +4,7 @@ import FrontPage from "./Frontend";
 import { useNavigate } from "react-router-dom";
 import {toast} from "react-toastify"
 
-export default function Dashboard({ isAuthenticated, backendActor }) {
+export default function Dashboard({ isAuthenticated, backendActor, principal }) {
   const [account, setAccount] = useState({
     ok: {},
     err: "",
@@ -59,7 +59,7 @@ export default function Dashboard({ isAuthenticated, backendActor }) {
             draggable: true,
             progress: undefined,
             theme: "light",
-            transition: Bounce,
+            // transition: Bounce,
             });
           throw new Error(result.err);
         } else {
@@ -115,7 +115,7 @@ export default function Dashboard({ isAuthenticated, backendActor }) {
   return (
     <>
       {account.ok ? (
-        <FrontPage driverStatus={driverStatus} backendActor={backendActor} />
+        <FrontPage driverStatus={driverStatus} backendActor={backendActor} principal={principal}/>
       ) : (
         <CreateAccount
           handleSubmit={createAccount}
