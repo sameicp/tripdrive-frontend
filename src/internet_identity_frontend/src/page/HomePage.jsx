@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import model1 from "../../public/cyber_truck.jpg";
+
 import Dashboard from "./Dashboard";
 
 export default function HomePage({ backendActor, isAuthenticated, login, principal }) {
@@ -32,16 +34,11 @@ export default function HomePage({ backendActor, isAuthenticated, login, princip
         </div>
         <div className="flex justify-center items-center m-8 h-80">
           <img 
-            src="../../public/cyber_truck.jpg" 
+            src={model1}
             alt="Tesla car image" 
           />
         </div>
-        <div className="flex justify-center items-center mx-8 h-80">
-          <img 
-            src="../../public/tesla_models.jpg" 
-            alt="Tesla car image" 
-          />
-        </div>
+        
       </>
       )}
     </>

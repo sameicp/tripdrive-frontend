@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Request from "../components/Request";
 import RideInfo from "../components/RideInfo";
+import model2 from "../../public/tesla_models.jpg";
 
 export default function FrontPage({ driverStatus, backendActor, principal }) {
   const [request, setRequest] = useState("");
@@ -175,6 +176,12 @@ export default function FrontPage({ driverStatus, backendActor, principal }) {
             </Link>
           </div>
         )}
+        <div className="flex justify-center items-center h-80">
+          <img 
+            src={model2} 
+            alt="Tesla car image" 
+          />
+        </div>
       </div>
     </>
   );

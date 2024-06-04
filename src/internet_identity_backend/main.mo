@@ -49,7 +49,7 @@ actor {
   };
 
   type BitcoinActor = actor {
-    get_p2pkh_address: () -> async Text;
+    get_p2pkh_address: Principal -> async Text;
     get_balance: Text -> async Nat64;
     send: PaymentInfo -> async Text;
   };
@@ -363,7 +363,7 @@ actor {
   public shared({caller}) func create_user_acc(user_input: T.UserInput): async (Result.Result<Text, Text>) {
     try {
       await check_account(caller);
-      let user_address = await get_p2pkh_address();
+      let user_address: Text = await get_p2pkh_address(caller);
       // creating the user account
       let new_user: T.User = create_user(caller, user_input, user_address);
       users_map.put(caller, new_user);
@@ -660,7 +660,7 @@ actor {
       return await bitcoinActor.send(details);
     };
 
-    private func get_p2pkh_address(): async (BitcoinAddress) {
-      return await bitcoinActor.get_p2pkh_address();
+    private func get_p2pkh_address(address: Principal): async (BitcoinAddress) {
+      return await bitcoinActor.get_p2pkh_address(address);
     };
 };
