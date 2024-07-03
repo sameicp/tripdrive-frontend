@@ -19,6 +19,9 @@
 - our application generates an address for the user and the user can put their bitcoins into the addresses generarted for them
 - The bitcoins are the one used for payment when the trip has finished
 - The click here for [Bitcoin management Candid UI]("https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=z3c53-4iaaa-aaaap-qhj7q-cai")
+
+https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=z3c53-4iaaa-aaaap-qhj7q-cai
+
 - can look up the canister on the Internet computer canister dashboard.
 - the github repo for the code implementation is givem below
 
@@ -31,3 +34,5 @@ NB. Its quite important to note that because of the BitCoin Address management c
 But below is the Link of the live application on the internet computer
 
 [TripDrive Application]("https://evxow-6yaaa-aaaap-qhlyq-cai.icp0.io/")
+
+https://evxow-6yaaa-aaaap-qhlyq-cai.icp0.io/"
