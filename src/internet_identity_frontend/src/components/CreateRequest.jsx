@@ -11,7 +11,6 @@ export default function CreateRequest({ backendActor, isAuthenticated }) {
     lng: 0.0,
   });
   const [onSuccess, setOnSuccess] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(function (location) {

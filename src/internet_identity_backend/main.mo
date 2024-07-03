@@ -4,9 +4,8 @@ import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";
 import Buffer "mo:base/Buffer";
 import List "mo:base/List";
-import Debug "mo:base/Debug"; // use when the canister traps.
+import Debug "mo:base/Debug"; 
 import Option "mo:base/Option";
-// import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Error "mo:base/Error";
@@ -16,8 +15,10 @@ import Int64 "mo:base/Int64";
 actor {
   
   // storage.
-  let users_map = TrieMap.TrieMap<Principal, T.User>(Principal.equal, Principal.hash);
-  let drivers_map = TrieMap.TrieMap<Principal, T.Driver>(Principal.equal, Principal.hash);
+  let users_map 
+    = TrieMap.TrieMap<Principal, T.User>(Principal.equal, Principal.hash);
+  let drivers_map 
+    = TrieMap.TrieMap<Principal, T.Driver>(Principal.equal, Principal.hash);
 
   // a record of the rides on the platform.
   stable var ride_information_storage = List.nil<T.RideInformation>();
@@ -95,7 +96,9 @@ actor {
   /// Define an internal helper function to retrieve requests by ID:
   func find_request(request_id : T.RequestID) : ?T.RideRequestType {
     let result: ?T.RideRequestType = 
-      List.find<T.RideRequestType>(pool_requests, func request = request.request_id == request_id);
+      List.find<T.RideRequestType>(
+        pool_requests, 
+        func request = request.request_id == request_id);
     return result;
   };
 
@@ -107,7 +110,9 @@ actor {
     };
   };
 
-  func check_if_user_made_request(user_id: Principal, request_id: T.RequestID): async() {
+  func check_if_user_made_request(
+    user_id: Principal, 
+    request_id: T.RequestID): async() {
     // check if the user is the one who made the request
     let request: T.RideRequestType = extract_request(request_id);
     if (Principal.notEqual(user_id, request.user_id)) {
@@ -153,7 +158,10 @@ actor {
     return Buffer.toArray<T.FullRequestInfo>(output);
   };
 
-  func approve_ride(driver_id: Principal, request: T.RideRequestType, date_of_ride: Nat): async () {
+  func approve_ride(
+      driver_id: Principal, 
+      request: T.RideRequestType, 
+      date_of_ride: Nat): async () {
     let ride_id = create_ride_object(request, date_of_ride, driver_id);
     add_ride_id_to_passenger(request.user_id, ride_id);
     await add_ride_to_driver(driver_id, ride_id);
@@ -225,7 +233,10 @@ actor {
     };
   };
 
-  func _create_request(request_id: T.RequestID, user_id: Principal, request_input: T.RequestInput, passenger_details: T.Profile): T.RideRequestType {
+  func _create_request(request_id: T.RequestID, 
+    user_id: Principal, 
+    request_input: T.RequestInput, 
+    passenger_details: T.Profile): T.RideRequestType {
     return {
       request_id;
       user_id;
@@ -245,7 +256,9 @@ actor {
     };
   };
 
-  func create_user(id: Principal, user_input: T.UserInput, user_address: Text): T.User {
+  func create_user(id: Principal, 
+    user_input: T.UserInput, 
+    user_address: Text): T.User {
     let ride_history = List.nil<T.RideID>();
     return {
       id;
@@ -266,7 +279,9 @@ actor {
 
   func remove_request(request_id: T.RequestID) {
     pool_requests := 
-        List.filter<T.RideRequestType>(pool_requests, func request = request.request_id != request_id);
+        List.filter<T.RideRequestType>(
+          pool_requests, 
+          func request = request.request_id != request_id);
   };
 
   func check_principals(from_request: Principal, caller: Principal): async(){
@@ -362,6 +377,13 @@ actor {
 
   public shared({caller}) func create_user_acc(user_input: T.UserInput): async (Result.Result<Text, Text>) {
     try {
+      if (
+        user_input.username == "" or 
+        user_input.phoneNumber == "" or 
+        user_input.email == "") {
+        return #err("Failed to create an account because of missing information.");
+      };
+
       await check_account(caller);
       let user_address: Text = await get_p2pkh_address(caller);
       // creating the user account
@@ -375,13 +397,19 @@ actor {
 
   public shared({caller}) func create_request(request_input: T.RequestInput): async(Result.Result<T.RequestID, Text>) {
     try {
+      // Validating the inputs so that the program does not allow to record empty input
+      assert (request_input.depature != {});
+      assert (request_input.destination != {});
+      assert (request_input.price > 0.0);
+
       await check_user(caller);
       // generation the id of the request
       let request_id: T.RequestID = generate_request_id();
       // get basic infor about the passenger
       let passenger_details: T.Profile = await user_info(caller);
       // creating users request and add it to a list of requests
-      let request: T.RideRequestType = _create_request(request_id, caller, request_input, passenger_details);
+      let request: T.RideRequestType 
+        = _create_request(request_id, caller, request_input, passenger_details);
       // adding the request into a pool of request
       pool_requests := List.push(request, pool_requests);
       return #ok(request_id);
@@ -404,7 +432,9 @@ actor {
 
   // change the price on offer
   // am not sure if this works at all
-  public shared({caller}) func change_price(request_id: T.RequestID, new_price: Float): async(Result.Result<(), Text>) {
+  public shared({caller}) func change_price(
+    request_id: T.RequestID, 
+    new_price: Float): async(Result.Result<(), Text>) {
     try {
       await check_if_user_made_request(caller, request_id);
       await check_request(request_id);
@@ -427,7 +457,9 @@ actor {
     };
   };
 
-  public shared({caller}) func finished_ride(ride_id: T.RideID, request_id: T.RequestID): async(Result.Result<(Text), Text>) {
+  public shared({caller}) func finished_ride(
+    ride_id: T.RideID, 
+    request_id: T.RequestID): async(Result.Result<(Text), Text>) {
     try {
       await check_ride_info(ride_id);
       let ride: T.RideInformation = get_ride(ride_id);
@@ -458,16 +490,21 @@ actor {
   public shared({caller}) func get_request(): async Result.Result<[T.RequestOutput], Text> {
     try {
       let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
-      let user_requests: [T.RideRequestType] = Array.filter<T.RideRequestType>(requests_array, func request = request.user_id == caller);
-      let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(user_requests, func request = {
-        request_id = request.request_id;
-        user_id = request.user_id;
-        passenger_details = request.passenger_details;
-        depature = request.depature;
-        destination = request.destination;
-        status = request.status;
-        price = request.price;
-      });
+      let user_requests: [T.RideRequestType] 
+        = Array.filter<T.RideRequestType>(
+            requests_array, 
+            func request = request.user_id == caller);
+      let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(
+        user_requests, 
+        func request = {
+          request_id = request.request_id;
+          user_id = request.user_id;
+          passenger_details = request.passenger_details;
+          depature = request.depature;
+          destination = request.destination;
+          status = request.status;
+          price = request.price;
+        });
       return #ok(Array.take(requests, 1));
     } catch e {
       return #err(Error.message(e));
@@ -510,7 +547,9 @@ actor {
 
   // logic after the driver has selected a passenger for the trip
   // this is the stage where we create a ride info object and add it to the list.
-  public shared({caller}) func select_passenger(request_id: T.RequestID, date_of_ride: Nat): async(Result.Result<(), Text>) {
+  public shared({caller}) func select_passenger(
+    request_id: T.RequestID, 
+    date_of_ride: Nat): async(Result.Result<(), Text>) {
     try {
       // get the request if it exist
       await check_request(request_id);
@@ -528,17 +567,22 @@ actor {
    public func get_requests(cur_pos: T.Position): async Result.Result<[T.RequestOutput], Text> {
     try {
       let requests_array: [T.RideRequestType] = List.toArray(pool_requests);
-      let user_requests: [T.RideRequestType] = Array.filter<T.RideRequestType>(requests_array, 
-        func request = (request.status == #Pending and distance(request.depature, cur_pos) <= 4.0));
-      let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(user_requests, func request = {
-        request_id = request.request_id;
-        user_id = request.user_id;
-        passenger_details = request.passenger_details;
-        depature = request.depature;
-        destination = request.destination;
-        status = request.status;
-        price = request.price;
-      });
+      let user_requests: [T.RideRequestType] 
+        = Array.filter<T.RideRequestType>(
+            requests_array, 
+            func request 
+              = (request.status == #Pending and distance(request.depature, cur_pos) <= 4.0));
+      let requests: [T.RequestOutput] = Array.map<T.RideRequestType, T.RequestOutput>(
+          user_requests, 
+          func request = {
+            request_id = request.request_id;
+            user_id = request.user_id;
+            passenger_details = request.passenger_details;
+            depature = request.depature;
+            destination = request.destination;
+            status = request.status;
+            price = request.price;
+          });
       return #ok(requests);
     } catch e {
       return #err(Error.message(e));
@@ -590,24 +634,28 @@ actor {
       var pending_rides: List.List<T.RideInformation> = List.nil<T.RideInformation>();
       for (ride_id in ride_ids.vals()) {
         for (ride_info in ride_information.vals()) {
-          if (ride_id == ride_info.ride_id and (ride_info.ride_status == #RideAccepted or ride_info.ride_status == #RideStarted)) {
+          if (ride_id == ride_info.ride_id 
+              and (ride_info.ride_status == #RideAccepted 
+                    or ride_info.ride_status == #RideStarted)) {
             pending_rides := List.push(ride_info, pending_rides);
           };
         };
       };
 
       let array_pending_rides: [T.RideInformation] = List.toArray(pending_rides);
-      let output_rides: [T.RideInfoOutput] = Array.map<T.RideInformation, T.RideInfoOutput>(array_pending_rides, func ride = {
-        ride_id = ride.ride_id;
-        user_id = ride.user_id;
-        driver_id = ride.driver_id;
-        origin = ride.origin;
-        destination = ride.destination;
-        payment_status = ride.payment_status;
-        price = ride.price;
-        ride_status = ride.ride_status;
-        date_of_ride = ride.date_of_ride;
-      });
+      let output_rides: [T.RideInfoOutput] = Array.map<T.RideInformation, T.RideInfoOutput>(
+        array_pending_rides, 
+        func ride = {
+          ride_id = ride.ride_id;
+          user_id = ride.user_id;
+          driver_id = ride.driver_id;
+          origin = ride.origin;
+          destination = ride.destination;
+          payment_status = ride.payment_status;
+          price = ride.price;
+          ride_status = ride.ride_status;
+          date_of_ride = ride.date_of_ride;
+        });
 
       // return the list of the ride information
       return #ok(output_rides);

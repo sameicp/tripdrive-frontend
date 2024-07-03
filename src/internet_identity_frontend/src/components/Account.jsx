@@ -103,7 +103,7 @@ export default function Account({ backendActor, isAuthenticated }) {
                 </span>
                 <input
                   className="px-4 border-l-0 cursor-default border-gray-300 text-gray-700 focus:outline-none  rounded-md rounded-l-none shadow-sm -ml-1 w-4/6"
-                  type="text"
+                  type="number"
                   value={account.bitcoin_balance}
                   readOnly
                 />
